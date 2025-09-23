@@ -1,0 +1,16 @@
+{
+  "name": "init",
+  "version": "1.0.0",
+  "main": "index.js",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "bump": "npx npm-check-updates -u"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
