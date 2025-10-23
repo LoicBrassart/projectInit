@@ -81,6 +81,8 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
+      adminer:
+        condition: service_healthy
     environment:
       SERVICE_PORT: ${SERVICE_PORT}
       UPLOAD_SIZE: ${UPLOAD_SIZE}
@@ -104,3 +106,9 @@ services:
         "-t",
         "/var/www/html",
       ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -m 5 --fail --request GET --url 'http://adminer:${SERVICE_PORT}' || exit 1",
+        ]
