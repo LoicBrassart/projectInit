@@ -32,7 +32,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -m 5 --fail --request GET --url 'http://backend:${SERVICE_PORT}/api' || exit 1",
+          'curl -m 5 --fail --request POST --header ''Content-Type: application/json'' --url ''http://backend:${SERVICE_PORT}/api'' --data ''{"query":"query { __typename }"}'' || exit 1',
         ]
     volumes:
       - ../../backend/src:/app/src/
