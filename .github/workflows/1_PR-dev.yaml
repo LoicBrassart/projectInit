@@ -1,0 +1,68 @@
+name: Lint, Format & Cherry-picked Unit/integration Tests
+# When PR is created to `dev`, we want to automatically run unit and integrations tests for impacted services
+# [ghub] Lint/format code on the whole project
+# [ghub] For every service
+# [ghub]  Is the service impacted by the PR ?
+# [ghub]    Yes -> Run `npm run test` in it
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check-touched-services:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Add services here *and below*
+        service:
+          - frontend
+          - backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cache npm for ${{ matrix.service }}
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ${{ matrix.service }}/node_modules
+          key: ${{ runner.os }}-node-${{ matrix.service }}-${{ hashFiles(format('{0}/package-lock.json', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.service }}-
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+
+      - name: Run Biome
+        run: biome ci .
+
+      - name: Filter changed files
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          # Add services here *and above*
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
+      - name: Run unit & integration tests
+        if: ${{ steps.filter.outputs[matrix.service] == 'true' }}
+        working-directory: ${{ matrix.service }}
+        run: |
+          npm ci
+          npm run test

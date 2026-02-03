@@ -1,5 +1,5 @@
 x-baseService: &baseService
-  restart: always
+  restart: no
   healthcheck:
     interval: 1s
     timeout: 1s
@@ -81,36 +81,21 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
-      adminer:
-        condition: service_healthy
     environment:
       SERVICE_PORT: ${SERVICE_PORT}
       UPLOAD_SIZE: ${UPLOAD_SIZE}
 
-  adminer:
+  playwright-e2e:
     <<: *baseService
-    container_name: ${ENV}-adminer
-    image: adminer
+    container_name: ${ENV}-playwright
+    build:
+      context: ../../e2e
+      dockerfile: Dockerfile.e2e
+    volumes:
+      - ./persist/playwright/report:/app/playwright-report
+      - ./persist/playwright/results:/app/tests-results
     depends_on:
-      database:
-        condition: service_healthy
-    command:
-      [
-        "php",
-        "-d",
-        "post_max_size=${UPLOAD_SIZE}",
-        "-d",
-        "upload_max_filesize=${UPLOAD_SIZE}",
-        "-S",
-        "0.0.0.0:${SERVICE_PORT}",
-        "-t",
-        "/var/www/html",
-      ]
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -m 5 --fail --request GET --url 'http://adminer:${SERVICE_PORT}' || exit 1",
-        ]
+      gateway:
+        condition: service_started
     environment:
-      SERVICE_PORT: ${SERVICE_PORT}
+      WEBSITE_URL: http://gateway
